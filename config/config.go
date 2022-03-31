@@ -20,6 +20,7 @@ import (
 	"github.com/zhenghaoz/gorse/base"
 	"go.uber.org/zap"
 	"sync"
+	"time"
 )
 
 const (
@@ -91,14 +92,14 @@ func (config *DatabaseConfig) validate() {
 
 // MasterConfig is the configuration for the master.
 type MasterConfig struct {
-	Port              int    `mapstructure:"port"`                // master port
-	Host              string `mapstructure:"host"`                // master host
-	HttpPort          int    `mapstructure:"http_port"`           // HTTP port
-	HttpHost          string `mapstructure:"http_host"`           // HTTP host
-	NumJobs           int    `mapstructure:"n_jobs"`              // number of working jobs
-	MetaTimeout       int    `mapstructure:"meta_timeout"`        // cluster meta timeout (second)
-	DashboardUserName string `mapstructure:"dashboard_user_name"` // dashboard user name
-	DashboardPassword string `mapstructure:"dashboard_password"`  // dashboard password
+	Port              int           `mapstructure:"port"`                // master port
+	Host              string        `mapstructure:"host"`                // master host
+	HttpPort          int           `mapstructure:"http_port"`           // HTTP port
+	HttpHost          string        `mapstructure:"http_host"`           // HTTP host
+	NumJobs           int           `mapstructure:"n_jobs"`              // number of working jobs
+	MetaTimeout       time.Duration `mapstructure:"meta_timeout"`        // cluster meta timeout (second)
+	DashboardUserName string        `mapstructure:"dashboard_user_name"` // dashboard user name
+	DashboardPassword string        `mapstructure:"dashboard_password"`  // dashboard password
 }
 
 // LoadDefaultIfNil loads default settings if config is nil.
@@ -110,7 +111,7 @@ func (config *MasterConfig) LoadDefaultIfNil() *MasterConfig {
 			HttpPort:    8088,
 			HttpHost:    "127.0.0.1",
 			NumJobs:     1,
-			MetaTimeout: 60,
+			MetaTimeout: 60 * time.Second,
 		}
 	}
 	return config
@@ -119,18 +120,17 @@ func (config *MasterConfig) LoadDefaultIfNil() *MasterConfig {
 // validate MasterConfig.
 func (config *MasterConfig) validate() {
 	validatePositive("n_jobs", config.NumJobs)
-	validatePositive("meta_timeout", config.MetaTimeout)
 }
 
 // RecommendConfig is the configuration of recommendation setup.
 type RecommendConfig struct {
-	PopularWindow                int                `mapstructure:"popular_window"`
-	FitPeriod                    int                `mapstructure:"fit_period"`
-	SearchPeriod                 int                `mapstructure:"search_period"`
+	PopularWindow                time.Duration      `mapstructure:"popular_window"`
+	FitPeriod                    time.Duration      `mapstructure:"fit_period"`
+	SearchPeriod                 time.Duration      `mapstructure:"search_period"`
 	SearchEpoch                  int                `mapstructure:"search_epoch"`
 	SearchTrials                 int                `mapstructure:"search_trials"`
-	CheckRecommendPeriod         int                `mapstructure:"check_recommend_period"`
-	RefreshRecommendPeriod       int                `mapstructure:"refresh_recommend_period"`
+	CheckRecommendPeriod         time.Duration      `mapstructure:"check_recommend_period"`
+	RefreshRecommendPeriod       time.Duration      `mapstructure:"refresh_recommend_period"`
 	FallbackRecommend            []string           `mapstructure:"fallback_recommend"`
 	NumFeedbackFallbackItemBased int                `mapstructure:"num_feedback_fallback_item_based"`
 	ExploreRecommend             map[string]float64 `mapstructure:"explore_recommend"`
@@ -179,21 +179,21 @@ func (config *RecommendConfig) GetExploreRecommend(key string) (value float64, e
 func (config *RecommendConfig) LoadDefaultIfNil() *RecommendConfig {
 	if config == nil {
 		return &RecommendConfig{
-			PopularWindow:                180,
-			FitPeriod:                    60,
-			SearchPeriod:                 180,
+			PopularWindow:                180 * 24 * time.Hour,
+			FitPeriod:                    60 * time.Minute,
+			SearchPeriod:                 180 * time.Minute,
 			SearchEpoch:                  100,
 			SearchTrials:                 10,
-			CheckRecommendPeriod:         1,
-			RefreshRecommendPeriod:       5,
+			CheckRecommendPeriod:         time.Minute,
+			RefreshRecommendPeriod:       120 * time.Hour,
 			FallbackRecommend:            []string{"latest"},
 			NumFeedbackFallbackItemBased: 10,
 			ItemNeighborType:             "auto",
-			EnableItemNeighborIndex:      false,
+			EnableItemNeighborIndex:      true,
 			ItemNeighborIndexRecall:      0.8,
 			ItemNeighborIndexFitEpoch:    3,
 			UserNeighborType:             "auto",
-			EnableUserNeighborIndex:      false,
+			EnableUserNeighborIndex:      true,
 			UserNeighborIndexRecall:      0.8,
 			UserNeighborIndexFitEpoch:    3,
 			EnableLatestRecommend:        false,
@@ -201,7 +201,7 @@ func (config *RecommendConfig) LoadDefaultIfNil() *RecommendConfig {
 			EnableUserBasedRecommend:     false,
 			EnableItemBasedRecommend:     false,
 			EnableColRecommend:           true,
-			EnableColIndex:               false,
+			EnableColIndex:               true,
 			ColIndexRecall:               0.9,
 			ColIndexFitEpoch:             3,
 			EnableClickThroughPrediction: false,
@@ -215,12 +215,8 @@ func (config *RecommendConfig) LoadDefaultIfNil() *RecommendConfig {
 
 // validate RecommendConfig.
 func (config *RecommendConfig) validate() {
-	validateNotNegative("popular_window", config.PopularWindow)
-	validatePositive("fit_period", config.FitPeriod)
-	validatePositive("search_period", config.SearchPeriod)
 	validatePositive("search_epoch", config.SearchEpoch)
 	validatePositive("search_trials", config.SearchTrials)
-	validatePositive("refresh_recommend_period", config.RefreshRecommendPeriod)
 	validateSubset("fallback_recommend", config.FallbackRecommend, []string{"item_based", "popular", "latest"})
 	validateIn("item_neighbor_type", config.ItemNeighborType, []string{"similar", "related", "auto"})
 	validateIn("user_neighbor_type", config.UserNeighborType, []string{"similar", "related", "auto"})
@@ -228,9 +224,9 @@ func (config *RecommendConfig) validate() {
 
 // ServerConfig is the configuration for the server.
 type ServerConfig struct {
-	APIKey      string `mapstructure:"api_key"`      // default number of returned items
-	DefaultN    int    `mapstructure:"default_n"`    // secret key for RESTful APIs (SSL required)
-	EpsilonTime int    `mapstructure:"epsilon_time"` // clock error in the cluster in seconds
+	APIKey      string        `mapstructure:"api_key"`      // default number of returned items
+	DefaultN    int           `mapstructure:"default_n"`    // secret key for RESTful APIs (SSL required)
+	EpsilonTime time.Duration `mapstructure:"epsilon_time"` // clock error in the cluster in seconds
 }
 
 // LoadDefaultIfNil loads default settings if config is nil.
@@ -238,7 +234,7 @@ func (config *ServerConfig) LoadDefaultIfNil() *ServerConfig {
 	if config == nil {
 		return &ServerConfig{
 			DefaultN:    10,
-			EpsilonTime: 5,
+			EpsilonTime: 5 * time.Second,
 		}
 	}
 	return config

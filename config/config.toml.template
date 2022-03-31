@@ -44,7 +44,7 @@ host = "0.0.0.0"                # master host
 http_port = 8088                # HTTP API port
 http_host = "0.0.0.0"           # HTTP API host
 n_jobs = 4                      # number of working jobs
-meta_timeout = 10               # cluster meta timeout (second)
+meta_timeout = "10s"            # cluster meta timeout
 dashboard_user_name = "admin"   # dashboard user name
 dashboard_password = "password" # dashboard password
 
@@ -52,19 +52,19 @@ dashboard_password = "password" # dashboard password
 [server]
 default_n = 10                  # default number of returned items
 api_key = ""                    # secret key for RESTful APIs (SSL required)
-epsilon_time = 5                # clock error in the cluster in seconds
+epsilon_time = "5s"             # clock error in the cluster
 
 # This section declares settings for recommendation.
 [recommend]
 
-# The time window of popular items (days). The default values is 180.
-popular_window = 30
+# The time window of popular items (days). The default values is 720h.
+popular_window = "720h"
 
-# The time period for model fitting (minutes). The default values is 60.
-fit_period = 360
+# The time period for model fitting (minutes). The default values is 60m.
+fit_period = "60m"
 
-# The time period for model searching (minutes). The default values is 100.
-search_period = 60
+# The time period for model searching (minutes). The default values is 180m.
+search_period = "360m"
 
 # The number of epochs for model searching. The default values is 100.
 search_epoch = 100
@@ -72,11 +72,11 @@ search_epoch = 100
 # The number of trials for model searching. The default values is 10.
 search_trials = 10
 
-# The time period to check recommendation for users (minutes). The default values is 1.
-check_recommend_period = 1
+# The time period to check recommendation for users. The default values is 1m.
+check_recommend_period = "1m"
 
-# The time period to refresh recommendation for inactive users (days). The default values is 5.
-refresh_recommend_period = 1
+# The time period to refresh recommendation for inactive users. The default values is 120h.
+refresh_recommend_period = "24h"
 
 # The fallback recommendation method is used when cached recommendation drained out:
 #   item_based: Recommend similar items to cold-start users.

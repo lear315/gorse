@@ -112,7 +112,7 @@ func NewWorker(masterHost string, masterPort int, httpHost string, httpPort, job
 // Sync this worker to the master.
 func (w *Worker) Sync() {
 	defer base.CheckPanic()
-	base.Logger().Info("start meta sync", zap.Int("meta_timeout", w.cfg.Master.MetaTimeout))
+	base.Logger().Info("start meta sync", zap.Duration("meta_timeout", w.cfg.Master.MetaTimeout))
 	for {
 		var meta *protocol.Meta
 		var err error
@@ -137,7 +137,7 @@ func (w *Worker) Sync() {
 		w.cfg.Recommend.UnLock()
 
 		// reset ticker
-		w.ticker.Reset(time.Duration(w.cfg.Recommend.CheckRecommendPeriod) * time.Minute)
+		w.ticker.Reset(w.cfg.Recommend.CheckRecommendPeriod)
 
 		// connect to data store
 		if w.dataPath != w.cfg.Database.DataStore {
@@ -183,7 +183,7 @@ func (w *Worker) Sync() {
 		if w.testMode {
 			return
 		}
-		time.Sleep(time.Duration(w.cfg.Master.MetaTimeout) * time.Second)
+		time.Sleep(w.cfg.Master.MetaTimeout)
 	}
 }
 
@@ -891,7 +891,7 @@ func (w *Worker) checkRecommendCacheTimeout(userId string, categories []string) 
 	}
 	// check time
 	if activeTime.Unix() < recommendTime.Unix() {
-		timeoutTime := recommendTime.Add(time.Hour * 24 * time.Duration(w.cfg.Recommend.RefreshRecommendPeriod))
+		timeoutTime := recommendTime.Add(w.cfg.Recommend.RefreshRecommendPeriod)
 		return timeoutTime.Unix() < time.Now().Unix()
 	}
 	return true

@@ -1011,7 +1011,7 @@ func (m *Master) LoadDataFromDatabase(database data.Database, posFeedbackTypes, 
 	}
 	timeWindowLimit := time.Time{}
 	if m.GorseConfig.Recommend.PopularWindow > 0 {
-		timeWindowLimit = time.Now().AddDate(0, 0, -m.GorseConfig.Recommend.PopularWindow)
+		timeWindowLimit = time.Now().Add(-m.GorseConfig.Recommend.PopularWindow)
 	}
 	rankingDataset = ranking.NewMapIndexDataset()
 

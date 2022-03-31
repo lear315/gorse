@@ -19,6 +19,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -42,23 +43,23 @@ func TestLoadConfig(t *testing.T) {
 	assert.Equal(t, 8088, config.Master.HttpPort)
 	assert.Equal(t, "0.0.0.0", config.Master.HttpHost)
 	assert.Equal(t, 4, config.Master.NumJobs)
-	assert.Equal(t, 10, config.Master.MetaTimeout)
+	assert.Equal(t, 10*time.Second, config.Master.MetaTimeout)
 	assert.Equal(t, "admin", config.Master.DashboardUserName)
 	assert.Equal(t, "password", config.Master.DashboardPassword)
 
 	// server configuration
 	assert.Equal(t, 10, config.Server.DefaultN)
 	assert.Equal(t, "", config.Server.APIKey)
-	assert.Equal(t, 5, config.Server.EpsilonTime)
+	assert.Equal(t, 5*time.Second, config.Server.EpsilonTime)
 
 	// recommend configuration
-	assert.Equal(t, 30, config.Recommend.PopularWindow)
-	assert.Equal(t, 360, config.Recommend.FitPeriod)
-	assert.Equal(t, 60, config.Recommend.SearchPeriod)
+	assert.Equal(t, 30*24*time.Hour, config.Recommend.PopularWindow)
+	assert.Equal(t, 60*time.Minute, config.Recommend.FitPeriod)
+	assert.Equal(t, 360*time.Minute, config.Recommend.SearchPeriod)
 	assert.Equal(t, 100, config.Recommend.SearchEpoch)
 	assert.Equal(t, 10, config.Recommend.SearchTrials)
-	assert.Equal(t, 1, config.Recommend.CheckRecommendPeriod)
-	assert.Equal(t, 1, config.Recommend.RefreshRecommendPeriod)
+	assert.Equal(t, time.Minute, config.Recommend.CheckRecommendPeriod)
+	assert.Equal(t, 24*time.Hour, config.Recommend.RefreshRecommendPeriod)
 	assert.Equal(t, []string{"item_based", "latest"}, config.Recommend.FallbackRecommend)
 	assert.Equal(t, map[string]float64{"popular": 0.1, "latest": 0.2}, config.Recommend.ExploreRecommend)
 	assert.Equal(t, 10, config.Recommend.NumFeedbackFallbackItemBased)
